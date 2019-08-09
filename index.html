@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <meta name="author" content="yyk,15934524011@163.com">
+    <meta name="revised" content="yyk, 2019">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta http-equiv="refresh" content="20"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <script src="http://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script type="text/javascript">
+        function setRem() {
+            var html = document.documentElement;
+            var hWidth = html.getBoundingClientRect().width;
+            if (hWidth > 640) hWidth = 640;
+            html.style.fontSize = hWidth / 10 + 'px';
+        }
+
+        setRem();
+    </script>
+    <link rel="stylesheet" href="css/clock.css">
+</head>
+<body>
+
+            <div class="time-panel">
+                <div class="year-line">
+                    <button id="preMonth" class="year-prev"><</button>
+                    <p><span id="nowYear" class="year-now"></span>年<span id="nowMonth"></span>月</p>
+                    <button id="nextMonth" class="year-next">></button>
+                </div>
+                <div id="weekLine" class="week-line"></div>
+                <ul id="dateWrap" class="date-wrap"></ul>
+            </div>
+    <script>
+
+        var signList=[{"signDay":"23"},{"signDay":"24"},{"signDay":"25"},{"signDay":"26"},{"signDay":"30"}];
+        // 工具方法 - start
+        // 1.为了获得每个月的日期有多少，我们需要判断 平年闰年[四年一闰，百年不闰，四百年再闰]
+        const isLeapYear = (year) => {
+            return (year % 400 === 0) || (year % 100 !== 0 && year % 4 === 0);
+        };
+        // 2.获得每个月的日期有多少，注意 month - [0-11]
+        const getMonthCount = (year, month) => {
+            let arr = [
+                31, null, 31, 30,
+                31, 30, 31, 31,
+                30, 31, 30, 31
+            ];
+            let count = arr[month] || (isLeapYear(year) ? 29 : 28);
+            return Array.from(new Array(count), (item, value) => value + 1);
+        };
+        // 3.获得某年某月的 1号 是星期几，这里要注意的是 JS 的 API-getDay() 是从 [日-六](0-6)，返回 number
+        const getWeekday = (year, month) => {
+            let date = new Date(year, month, 1);
+            return date.getDay();
+        };
+        // 4.获得上个月的天数
+        const getPreMonthCount = (year, month) => {
+            if (month === 0) {
+                return getMonthCount(year - 1, 11);
+            } else {
+                return getMonthCount(year, month - 1);
+            }
+        };
+        // 5.获得下个月的天数
+        const getNextMonthCount = (year, month) => {
+            if (month === 11) {
+                return getMonthCount(year + 1, 0);
+            } else {
+                return getMonthCount(year, month + 1);
+            }
+        };
+        //6.判断签到
+        const ifHasSigned = (signList,day) => {
+            var signed = false;
+            $.each(signList,function(index,item){
+                if(item.signDay == day) {
+                    signed = true;
+                    return false;
+                }
+            });
+            return signed ;
+        }
+        // 工具方法 - end
+        let weekStr = '日一二三四五六';
+        weekArr = weekStr.split('').map(item => item);
+        // 插入星期 dom
+        let weekDomStr = '';
+        let oFragWeek = document.createDocumentFragment();
+        weekArr.forEach(item => {
+            let oSpan = document.createElement('span');
+            let oText = document.createTextNode(item);
+            oSpan.appendChild(oText);
+            oSpan.classList.add('week-item');
+            oFragWeek.appendChild(oSpan);
+        });
+        let weekWrap = document.getElementById('weekLine');
+        weekWrap.appendChild(oFragWeek);
+
+        // 这里获得我们第一次的 数据 数组
+        const updateCalendar = (year, month, day) => {
+            var dateWrap=$('#dateWrap');
+            dateWrap.empty();
+            if (typeof year === 'undefined' && typeof month === 'undefined' && typeof day === 'undefined') {
+                let nowDate = new Date();
+                year = nowDate.getFullYear();
+                month = nowDate.getMonth();
+                // day = nowDate.getDate();
+            }
+            // 更新一下顶部的年月显示
+            document.getElementById('nowYear').innerHTML = year;
+            document.getElementById('nowMonth').innerHTML = month + 1;
+            // 生成日历数据，上个月的 x 天 + 当月的 [28,29,30,31]天 + 下个月的 y 天 = 42
+            let res = [];
+            let currentMonth = getMonthCount(year, month);
+            let preMonth = getPreMonthCount(year, month);
+            let whereMonday = getWeekday(year, month);
+            if(whereMonday ==0){
+                res = currentMonth;
+            }else{
+                let preArr = preMonth.slice(-1 * whereMonday);
+                preArr = preArr.map(item => '');
+                res = [].concat(preArr, currentMonth);
+            }
+            // 上面经过我本人的测试是没有什么问题，接下来就是更新 dom 的信息的问题
+            for (let i = 0; i < res.length; i++) {
+                let strstring=res[i];
+                let ifHasSigneds = ifHasSigned(signList,strstring);
+                if(ifHasSigneds){
+                    let str = $(`<li><span class="ok">`+strstring+`</span></li>`);
+                    dateWrap.append(str);
+                }else{
+                    let str = $(`<li><span>`+strstring+`</span></li>`);
+                    dateWrap.append(str);
+                }
+            }
+        };
+
+        updateCalendar();
+        // 添加上一月，下一月事件
+        let oPreButton = document.getElementById('preMonth');
+        let oNextButton = document.getElementById('nextMonth');
+        oPreButton.addEventListener('click', function () {
+            let currentYear = +document.getElementById('nowYear').textContent;
+            let currentMonth = +document.getElementById('nowMonth').textContent - 1;
+            if (currentMonth === 0) {
+                updateCalendar(currentYear - 1, 11);
+            } else {
+                updateCalendar(currentYear, currentMonth - 1);
+            }
+        });
+        oNextButton.addEventListener('click', function () {
+            let currentYear = +document.getElementById('nowYear').textContent;
+            let currentMonth = +document.getElementById('nowMonth').textContent - 1;
+            if (currentMonth === 11) {
+                updateCalendar(currentYear + 1, 0);
+            } else {
+                updateCalendar(currentYear, currentMonth + 1);
+            }
+        });
+    </script>
+</body>
+</html>
