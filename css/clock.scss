@@ -1,0 +1,74 @@
+@import "public";
+$color: #ff956b;
+.time-panel{
+  margin-top: torem(22px);
+  padding-bottom: torem(24px);
+  background: #fff;
+  border-radius: 4px;
+  text-align: center;
+}
+.year-line{
+  display: flex;
+  align-items: center;
+  p{
+    margin: 0 auto;
+    font-size: torem(28px);
+    color: $color;
+    line-height: torem(75px);
+  }
+  button{
+    margin: 0 torem(30px);
+    background: 0;
+    font-size: torem(28px);
+    color: $color;
+    border: 0 ;
+  }
+}
+.week-line{
+  display: flex;
+  span{
+    display: block;
+    width: torem(100px);
+    font-size: torem(26px);
+    color: #a4a4a4;
+    line-height: torem(60px);
+  }
+}
+.date-wrap{
+  display: flex;
+  flex-wrap: wrap;
+  li{
+    width: torem(100px);
+    padding: torem(6px) 0;
+    span{
+      display: inline-block;
+      width: torem(48px);
+      height: torem(48px);
+      font-size: torem(26px);
+      color: #222222;
+      line-height: torem(48px);
+    }
+    .ok{
+      background: $color;
+      color: #fff;
+      border-radius: 50%;
+    }
+  }
+}
+
+.date-line{
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  span{
+    width: torem(100px);
+    padding: torem(6px) 0;
+    margin: torem(6px) 0;
+    display: block;
+    //width: torem(48px);
+    height: torem(48px);
+    font-size: torem(26px);
+    color: #222222;
+    line-height: torem(48px);
+  }
+}
